@@ -1,6 +1,4 @@
 
-Imports System.Runtime.InteropServices
-Imports System.Text
 Public Class memory
 
     Public Structure W2SMatrix
@@ -25,6 +23,17 @@ Public Class memory
         Dim f33 As Single
     End Structure
 
+    Public Structure fVec2
+        Dim x As Single
+        Dim y As Single
+    End Structure
+
+    Public Structure fVec3
+        Dim x As Single
+        Dim y As Single
+        Dim z As Single
+    End Structure
+
 #Region "WindowsAPI"
     Public Const PROCESS_ALL_ACCESS = &H1F0FF
     Private Declare Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Integer, ByVal bInheritHandle As Integer, ByVal dwProcessId As Integer) As IntPtr
@@ -35,7 +44,8 @@ Public Class memory
     Private Declare Function ReadMemoryF Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, ByRef lpBuffer As Single, ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
     Private Declare Function ReadMemoryB Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, ByRef lpBuffer As Boolean, ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
     Private Declare Function ReadMemoryViewMatrix Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, ByRef lpBuffer As W2SMatrix, ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
-    Private Declare Function ReadMemoryString Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, <Out()> ByVal u32Buffer As Byte(), ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
+    Private Declare Function ReadMemoryFVec2 Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, ByRef lpBuffer As fVec2, ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
+    Private Declare Function ReadMemoryFVec3 Lib "ntdll" Alias "NtReadVirtualMemory" (ByVal hProcess As IntPtr, ByVal lpBaseAddress As Integer, ByRef lpBuffer As fVec3, ByVal nSize As Integer, ByRef lpNumberOfBytesWritten As Integer) As Boolean
     Public Declare Function CloseHandle Lib "kernel32" Alias "CloseHandle" (ByVal hobject As IntPtr) As Boolean
 #End Region
     Public Shared Function GetOffsetByName(ByVal data As String, ByVal offset As String) As Integer
@@ -96,10 +106,15 @@ Public Class memory
         ReadMemoryViewMatrix(hProcess, address, buffer, 64, 0)
         Return buffer
     End Function
-    Public Shared Function RPMString(ByVal hProcess As IntPtr, ByVal address As Int32, ByVal stringSize As Integer) As String
-        Dim buffer(stringSize) As Byte
-        ReadMemoryString(hProcess, address, buffer, stringSize, 0)
-        Return Encoding.UTF8.GetString(buffer)
+    Public Shared Function RPMFVec2(ByVal hProcess As IntPtr, ByVal address As Int32) As fVec2
+        Dim buffer As fVec2
+        ReadMemoryFVec2(hProcess, address, buffer, 8, 0)
+        Return buffer
+    End Function
+    Public Shared Function RPMFVec3(ByVal hProcess As IntPtr, ByVal address As Int32) As fVec3
+        Dim buffer As fVec3
+        ReadMemoryFVec3(hProcess, address, buffer, 12, 0)
+        Return buffer
     End Function
     Public Shared Function WPMInt(ByVal hProcess As IntPtr, ByVal address As Int32, ByVal value As Integer) As Boolean
         If WriteMemory(hProcess, address, value, 4, 0) Then
@@ -122,5 +137,7 @@ Public Class memory
             Return False
         End If
     End Function
+
+
 
 End Class
